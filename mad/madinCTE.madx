@@ -1,0 +1,174 @@
+OPTION, -ECHO -INFO;
+
+! run = 1 : runII 2016
+! run = 2 : HLLHCV1.0
+mrun = 2;
+
+if (mrun==1) {
+  system,"ln -fns  /afs/cern.ch/eng/lhc/optics/runII/2016/ db5";  
+  CALL, file="db5/lhc_as-built.seq";
+};
+
+if (mrun==2) {
+  system,"ln -fns /afs/cern.ch/eng/lhc/optics/HLLHCV1.1/ db5";
+  CALL, file="db5/hllhc.seq";
+};
+
+! coll = 0 : p-p
+! coll = 1 : Pb-Pb
+! coll = 2 : p-Pb
+
+coll = 1;
+
+protonmass = 0.9382723128; !GeV
+pbmass = 193.729174849; !GeV
+
+ener=7000;
+gammaproton=ener/protonmass;
+gammaion=82*ener/pbmass;
+
+value, ener;
+value, gammaproton;
+value, gammaion;
+value, coll;
+OPTION, -echo,-info;
+
+if (coll==0){
+  npart1 = 1.0e11; ! pp-sim
+  npart2 = 1.0e11; ! pp-sim
+  
+  exn1=2.5e-6;
+  eyn1=2.5e-6;
+  exn2=2.5e-6;
+  eyn2=2.5e-6;
+  
+  ex1=exn1/gammaproton; 
+  ey1=eyn1/gammaproton;
+  ex2=exn2/gammaproton;
+  ey2=eyn2/gammaproton;
+
+  CALL, file="db5/opt_inj_colltunes.madx";  
+  CALL, file="db5/opt_600_10000_600_3000.madx";
+  
+  ! Beam definition
+  BEAM, SEQUENCE=lhcb1, BV= 1, ENERGY=ener,  PARTICLE=proton,
+    NPART=npart1,KBUNCH=2748, EX=ex1,EY=ey1;
+  BEAM, SEQUENCE=lhcb2, BV=-1, ENERGY=ener,  PARTICLE=proton,
+    NPART=npart2,KBUNCH=2748, EX=ex2,EY=ey2;
+  
+  USE, PERIOD=lhcb1;
+  SELECT, FLAG=TWISS,CLEAR;
+  SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+  TWISS,SEQUENCE=lhcb1,FILE="lhcb1-pp-6500.tfs"; 
+
+  USE, PERIOD=lhcb2;
+  SELECT, FLAG=TWISS,CLEAR;
+  SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+  TWISS,SEQUENCE=lhcb2,FILE="lhcb2-pp-6500.tfs";
+};
+
+if (coll==1) {
+  if (mrun==1){
+    npart1=1.8e8 ! Pb-Pb-sim
+    npart2=1.8e8 ! Pb-Pb-sim
+  
+    exn1=1.5e-6;
+    eyn1=1.5e-6;
+    exn2=1.5e-6;
+    eyn2=1.5e-6;
+ 
+    ex1=exn1/gammaion;
+    ey1=eyn1/gammaion;
+    ex2=exn2/gammaion;
+    ey2=eyn2/gammaion;
+  
+    CALL, file="db5/opt_inj_colltunes_ion.madx";
+    CALL, file="db5/opt_800_800_800_3000_ion_coll.madx";
+
+    ! Beam definition
+    BEAM, SEQUENCE=lhcb1, BV= 1, ENERGY=ener*82.0,CHARGE=82.0,MASS=pbmass,SIGT=0.083,SIGE=0.000113,  
+      NPART=npart1,KBUNCH=500, EX=ex1,EY=ey1;
+    BEAM, SEQUENCE=lhcb2, BV=-1, ENERGY=ener*82.0,CHARGE=82.0,MASS=pbmass,SIGT=0.083,SIGE=0.000113,
+      NPART=npart2,KBUNCH=500, EX=ex2,EY=ey2;
+
+    USE, PERIOD=lhcb1;
+    SELECT, FLAG=TWISS,CLEAR;
+    SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+    TWISS,SEQUENCE=lhcb1,FILE="lhcb1-PbPb-6500.tfs";
+
+    USE, PERIOD=lhcb2;
+    SELECT, FLAG=TWISS,CLEAR;
+    SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+    TWISS,SEQUENCE=lhcb2,FILE="lhcb2-PbPb-6500.tfs";
+
+  };
+ 
+  if (mrun==2){
+    npart1=1.8e8;
+    npart2=1.8e8;
+   
+    exn1=1.65e-6;
+    eyn1=1.65e-6;
+    exn2=1.65e-6;
+    eyn2=1.65e-6;
+
+    ex1=exn1/gammaion;
+    ey1=eyn1/gammaion;
+    ex2=exn2/gammaion;
+    ey2=eyn2/gammaion;
+ 
+    CALL, file="db5/opt_ions.madx";
+    ! Beam definition
+    BEAM, SEQUENCE=lhcb1, BV=1, ENERGY=ener*82,CHARGE=82.0,MASS=pbmass,SIGT=0.075,SIGE=0.000113,
+      NPART=npart1,KBUNCH=500, EX=ex1,EY=ey1;
+    BEAM, SEQUENCE=lhcb2, BV=-1, ENERGY=ener*82.0,CHARGE=82.0,MASS=pbmass,SIGT=0.075,SIGE=0.000113,
+      NPART=npart2,KBUNCH=500, EX=ex2,EY=ey2;
+
+    USE, PERIOD=lhcb1;
+    SELECT, FLAG=TWISS,CLEAR;
+    SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+    TWISS,SEQUENCE=lhcb1,FILE="lhcb1-PbPb-HLLHC-7000.tfs";
+
+    USE, PERIOD=lhcb2;
+    SELECT, FLAG=TWISS,CLEAR;
+    SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+    TWISS,SEQUENCE=lhcb2,FILE="lhcb2-PbPb-HLLLHC-7000.tfs";
+  };
+};
+
+if (coll==2) {
+  npart1=2.1e10 ! p-Pb-sim
+  npart2=1.8e8 ! p-Pb-sim
+
+  exn1=2.5e-6;
+  eyn1=2.5e-6;
+  exn2=1.5e-6;
+  eyn2=1.5e-6;
+
+  ex1=exn1/gammaproton;
+  ey1=eyn1/gammaproton;
+  ex2=exn2/gammaion;
+  ey2=eyn2/gammaion;
+
+  CALL, file="db5/opt_inj_colltunes_ion.madx";
+  CALL, file="db5/opt_600_2000_600_1500_ppb8tev_coll.madx";
+
+  ! Beam definition
+  BEAM, SEQUENCE=lhcb1, BV= 1, ENERGY=ener,  PARTICLE=proton,
+    NPART=npart1,KBUNCH=500, EX=ex1,EY=ey1;
+  BEAM, SEQUENCE=lhcb2, BV=-1, ENERGY=ener*82.0,CHARGE=82.0,MASS=pbmass,SIGT=0.083,SIGE=0.000113,
+    NPART=npart2,KBUNCH=500, EX=ex2,EY=ey2;
+
+  USE, PERIOD=lhcb1;
+  SELECT, FLAG=TWISS,CLEAR;
+  SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+  TWISS,SEQUENCE=lhcb1,FILE="lhcb1-pPb-6500.tfs";
+
+  USE, PERIOD=lhcb2;
+  SELECT, FLAG=TWISS,CLEAR;
+  SELECT, FLAG=TWISS,RANGE=#S/#E,COLUMN={NAME,S,L,BETX,BETY,ALFX,ALFY,DX,DPX,DY,DPY,ANGLE,K1L,K1S,PX,PY};
+  TWISS,SEQUENCE=lhcb2,FILE="lhcb2-pPb-6500.tfs";
+
+};
+
+system,"unlink db5";

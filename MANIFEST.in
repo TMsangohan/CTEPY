@@ -1,0 +1,4 @@
+include README.rst
+include tfs/*.tfs
+include tfs/*.csv
+include mad/*.*
